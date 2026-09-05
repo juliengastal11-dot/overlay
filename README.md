@@ -53,7 +53,7 @@ le serveur et l'overlay n'utilisent que la bibliothèque standard de Node.
 ## Installation
 
 ```bash
-git clone https://github.com/<votre-compte>/overlay ~/.claude/skills/overlay
+git clone https://github.com/juliengastal11-dot/overlay ~/.claude/skills/overlay
 ```
 
 C'est tout. Ouvrez Claude Code dans le dossier de votre site et tapez `/overlay`.
