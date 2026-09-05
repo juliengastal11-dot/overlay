@@ -52,13 +52,26 @@ le serveur et l'overlay n'utilisent que la bibliothèque standard de Node.
 
 ## Installation
 
+Depuis Claude Code, sans quitter le terminal :
+
+```
+/plugin marketplace add juliengastal11-dot/overlay
+```
+
+```
+/plugin install overlay@overlay
+```
+
+Ou à la main :
+
 ```bash
 git clone https://github.com/juliengastal11-dot/overlay ~/.claude/skills/overlay
 ```
 
-C'est tout. Ouvrez Claude Code dans le dossier de votre site et tapez `/overlay`.
-
 Sous Windows, le dossier des skills est `%USERPROFILE%\.claude\skills\overlay`.
+
+Dans les deux cas, redémarrez Claude Code, ouvrez-le dans le dossier de votre site, et
+tapez `/overlay`. Il n'y a rien d'autre à installer.
 
 ## Licence
 

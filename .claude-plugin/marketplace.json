@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "overlay",
+  "version": "1.0.0",
+  "description": "Modifier au clic un site qu'on a déjà, quel que soit son framework.",
+  "owner": {
+    "name": "juliengastal11-dot",
+    "url": "https://github.com/juliengastal11-dot"
+  },
+  "plugins": [
+    {
+      "name": "overlay",
+      "source": "./",
+      "description": "Ouvre un site existant à côté du terminal et le fait modifier au clic : survol, sélection, bulle de commentaire, pastilles numérotées, envoi en lot. Sert un dossier statique ou fait proxy devant n'importe quel serveur de dev, sans toucher au code du site.",
+      "version": "1.0.0",
+      "author": {
+        "name": "juliengastal11-dot",
+        "url": "https://github.com/juliengastal11-dot"
+      },
+      "homepage": "https://github.com/juliengastal11-dot/overlay",
+      "repository": "https://github.com/juliengastal11-dot/overlay",
+      "license": "MIT",
+      "category": "development",
+      "keywords": [
+        "edition-visuelle",
+        "overlay",
+        "site-web",
+        "proxy",
+        "statique",
+        "nextjs",
+        "vite"
+      ]
+    }
+  ]
+}
