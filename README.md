@@ -17,6 +17,29 @@ C'est la phase d'édition du skill `buildyoursite`, extraite pour servir seule �
 n'importe quel site, quel que soit son framework, sans toucher à son code. Les deux
 s'installent séparément et ne dépendent pas l'un de l'autre.
 
+---
+
+## Démarrage rapide
+
+**1.** Dans Claude Code, deux commandes :
+
+```
+/plugin marketplace add juliengastal11-dot/overlay
+```
+
+```
+/plugin install overlay@overlay
+```
+
+**2.** Redémarrez Claude Code. Les skills sont recensés au lancement.
+
+**3.** Ouvrez-le dans le dossier de votre site et tapez `/overlay`.
+
+Il faut **Node 20 ou plus** et le panneau navigateur de Claude Code. Rien d'autre à
+installer : le serveur et l'overlay n'utilisent que la bibliothèque standard de Node.
+
+---
+
 ## Ce qu'il faut savoir
 
 **Il faut les fichiers.** Une URL est une image du site, pas son code. Le skill commence donc
