@@ -1,0 +1,16 @@
+{
+  "name": "overlay",
+  "description": "Ouvre un site existant à côté du terminal et le fait modifier au clic : survol, sélection, bulle de commentaire, pastilles numérotées, envoi en lot. Sert un dossier statique ou fait proxy devant n'importe quel serveur de dev, sans toucher au code du site.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "keywords": [
+    "edition-visuelle",
+    "overlay",
+    "site-web",
+    "proxy",
+    "statique",
+    "nextjs",
+    "vite"
+  ],
+  "skills": "./"
+}
