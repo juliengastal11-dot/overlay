@@ -1,10 +1,10 @@
 /* ---------------------------------------------------------------------------
-   Overlay d'édition visuelle — JavaScript pur, injecté par serveur-overlay.mjs.
+   Overlay d'édition visuelle : JavaScript pur, injecté par serveur-overlay.mjs.
 
    Survol = contour pointillé. Clic = sélection figée + bulle de commentaire.
-   Entrée enregistre, une pastille numérotée reste sur l'élément — et se
+   Entrée enregistre, une pastille numérotée reste sur l'élément, et se
    clique : le commentaire se rouvre, on le corrige ou on le retire. Les
-   commentaires partent en lot (« Envoyer — N ») ou un par un (« Changement
+   commentaires partent en lot (« Envoyer · N ») ou un par un (« Changement
    immédiat »). Après un envoi, une comète tourne autour de la barre tant que
    Claude n'a pas accusé réception. Alt+E bascule Navigation ⇄ Édition, Échap
    ferme.
@@ -167,7 +167,7 @@
 
   // Isolement : les règles globales du site (button, input, textarea…) ne
   // doivent pas déformer l'overlay. La comète : un dégradé conique dont l'angle
-  // tourne, posé derrière la barre, légèrement plus grand — la barre, opaque, ne
+  // tourne, posé derrière la barre, légèrement plus grand : la barre, opaque, ne
   // laisse voir qu'un anneau de trois pixels.
   const feuille = document.createElement("style");
   feuille.textContent =
@@ -399,10 +399,10 @@
     if (etat.brouillon) placer(boiteBrouillon, etat.brouillon.rect);
     else boiteBrouillon.style.display = "none";
 
-    // pastilles — cliquables : le commentaire se rouvre
+    // pastilles, cliquables : le commentaire se rouvre
     couchePastilles.replaceChildren(
       ...etat.commentaires.map((c) => {
-        const p = el("button", { type: "button", title: c.message + " — cliquer pour modifier", text: String(c.n) }, {
+        const p = el("button", { type: "button", title: c.message + " · cliquer pour modifier", text: String(c.n) }, {
           position: "absolute",
           top: c.rect.top - 10 + "px",
           left: c.rect.left - 10 + "px",
@@ -482,7 +482,7 @@
     flash.textContent = texteBarre || "";
     comete.style.display = etat.enAttente ? "block" : "none";
     envoyer.style.display = etat.commentaires.length > 0 ? "inline-block" : "none";
-    envoyer.textContent = etat.envoi ? "Envoi…" : "Envoyer — " + etat.commentaires.length;
+    envoyer.textContent = etat.envoi ? "Envoi…" : "Envoyer · " + etat.commentaires.length;
     envoyer.disabled = etat.envoi;
     enveloppeBarre.style.transform = "translate(" + etat.decalage.x + "px, " + etat.decalage.y + "px)";
     barre.style.cursor = etat.glisse ? "grabbing" : "grab";
@@ -504,7 +504,7 @@
 
   /* Tant qu'un lot est `pending`, on interroge le serveur toutes les 1,5 s.
      Claude passe le lot à `en_cours` dès son réveil : c'est ce qui arrête la
-     comète. Au montage, on vérifie une fois — un lot envoyé depuis une autre
+     comète. Au montage, on vérifie une fois : un lot envoyé depuis une autre
      page peut encore attendre. */
   async function verifierStatut() {
     try {

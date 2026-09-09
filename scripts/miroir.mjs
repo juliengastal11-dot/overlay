@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ---------------------------------------------------------------------------
-   Miroir — copie locale d'un site dont on n'a que l'adresse.
+   Miroir : copie locale d'un site dont on n'a que l'adresse.
 
    À n'utiliser que sur un site qui appartient à l'utilisateur. Copier le site
    d'un tiers pour le modifier est une contrefaçon, quel que soit le prétexte :
@@ -222,7 +222,7 @@ while (file.length > 0 && pagesVues.size < pagesMax) {
   if (!squeletteSignale && texteVisible(html).length < 300) {
     squeletteSignale = true;
     console.log("\n  ⚠ Cette page contient presque aucun texte : le site est probablement rendu côté");
-    console.log("    navigateur (React, Wix, Framer…). La copie sera un squelette — l'édition doit");
+    console.log("    navigateur (React, Wix, Framer…). La copie sera un squelette : l'édition doit");
     console.log("    passer par la vraie source ou l'outil d'origine.\n");
   }
 
@@ -240,7 +240,7 @@ if (echecs.length > 0) {
   const distincts = [...new Set(echecs)];
   console.log(
     `  ✗ ${echecs.length} fichier(s) non récupéré(s)` +
-      (distincts.length > 5 ? ` — par exemple ${distincts.slice(0, 5).join(", ")} …` : ` : ${distincts.join(", ")}`),
+      (distincts.length > 5 ? ` : par exemple ${distincts.slice(0, 5).join(", ")} …` : ` : ${distincts.join(", ")}`),
   );
 }
 console.log(

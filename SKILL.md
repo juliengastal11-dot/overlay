@@ -1,22 +1,22 @@
 ---
 name: overlay
-description: Ouvre un site existant dans le panneau navigateur avec l'overlay d'édition visuelle — survol, clic, bulle de commentaire, pastilles numérotées, barre Navigation/Édition — puis applique les modifications demandées dans le code. Déclenché par /overlay suivi d'une URL ou d'un dossier, ou quand l'utilisateur veut éditer au clic un site qu'il a déjà.
+description: Ouvre un site existant dans le panneau navigateur avec l'overlay d'édition visuelle (survol, clic, bulle de commentaire, pastilles numérotées, barre Navigation/Édition) puis applique les modifications demandées dans le code. Déclenché par /overlay suivi d'une URL ou d'un dossier, ou quand l'utilisateur veut éditer au clic un site qu'il a déjà.
 ---
 
 # /overlay
 
 Tu ouvres un site **déjà existant** à côté du terminal et tu le fais modifier au clic. C'est la
-phase 2 de `/buildyoursite`, extraite pour servir seule — sur n'importe quel site, pas
+phase 2 de `/buildyoursite`, extraite pour servir seule : sur n'importe quel site, pas
 seulement ceux que le skill a construits.
 
 ## Les deux règles absolues
 
 1. **On n'édite pas un rendu, on édite des fichiers.** Une URL seule est une image du site,
-   pas son code. Avant d'afficher quoi que ce soit, tu dois avoir **un dossier sur le disque**
-   — cloné, copié, ou téléchargé. Sans dossier, il n'y a rien à modifier.
-2. **En phase d'édition, tes réponses font UNE ligne.** « Fait — titre en orange. » Pas de
+   pas son code. Avant d'afficher quoi que ce soit, tu dois avoir **un dossier sur le disque** :
+   cloné, copié, ou téléchargé. Sans dossier, il n'y a rien à modifier.
+2. **En phase d'édition, tes réponses font UNE ligne.** « Fait : titre en orange. » Pas de
    récapitulatif. Tu ne développes que si quelque chose casse, ou si un clic révèle un défaut
-   plus large que la demande — une seconde ligne, pas plus.
+   plus large que la demande : une seconde ligne, pas plus.
 
 ## Modèle
 
@@ -25,7 +25,7 @@ sur un code qui existe déjà, avec un commentaire qui dit quoi changer et, le p
 le fichier visé nommé dans le lot. C'est du codage courant sur un périmètre connu : rapide,
 peu coûteux, sans perte de qualité.
 
-Repasse sur Opus 5 quand un retour demande une **décision** plutôt qu'une retouche —
+Repasse sur Opus 5 quand un retour demande une **décision** plutôt qu'une retouche :
 concevoir une section qui manque, revoir une structure, trancher un parti pris de design.
 Le critère : *est-ce que je remplace du texte et des classes, ou est-ce que je décide
 quelque chose ?*
@@ -42,13 +42,13 @@ quelque chose ?*
 `<skill>` est le dossier de base annoncé au lancement. Ne le code jamais en dur.
 
 Un site cloné ou copié atterrit **dans le dossier où la session est ouverte**, dans un
-sous-dossier à son nom — jamais ailleurs : les outils de Claude Code sont autorisés dans ce
+sous-dossier à son nom. Jamais ailleurs : les outils de Claude Code sont autorisés dans ce
 dossier et demandent une permission à chaque écriture en dehors. Propose le chemin, laisse
 l'utilisateur refuser.
 
 ---
 
-## Phase 0 — Obtenir les fichiers
+## Phase 0 : Obtenir les fichiers
 
 Lis ce que l'utilisateur t'a donné après `/overlay`.
 
@@ -107,21 +107,21 @@ node "<skill>/scripts/miroir.mjs" --url https://son-site.fr --sortie "<racinePro
 ```
 
 **Dis-lui ce qu'est une copie.** Le miroir télécharge les pages rendues, les feuilles de
-style, les scripts et les images — c'est du HTML figé, pas la source. Sur un site généré côté
+style, les scripts et les images. C'est du HTML figé, pas la source. Sur un site généré côté
 navigateur (React, Wix, Framer, Webflow avec JS), la copie est un squelette : le script te le
 signale, et l'édition devra alors passer par la vraie source ou l'outil d'origine. Sur un site
 statique ou WordPress rendu côté serveur, la copie s'édite très bien.
 
-Ce qu'il fait des modifications ensuite — remettre en ligne, reporter dans son outil — lui
+Ce qu'il fait des modifications ensuite (remettre en ligne, reporter dans son outil) lui
 appartient. Tu ne déploies rien.
 
-## Phase 1 — Afficher
+## Phase 1 : Afficher
 
 1. **Point de restauration.** Si le dossier n'est pas un dépôt git : `git init`, puis un
    premier commit `overlay: état initial`. Sans ça, « reviens en arrière » est impossible. Si
    `git config user.email` est vide, pose l'identité en local depuis `gitNom` / `gitEmail` du
    `config.json` de `/buildyoursite` s'il est installé, sinon demande-la en une ligne.
-   Ajoute `.overlay/` au `.gitignore` du site — les commentaires ne sont pas une livraison.
+   Ajoute `.overlay/` au `.gitignore` du site : les commentaires ne sont pas une livraison.
 
 2. **Lance le serveur d'overlay**, depuis le dossier du site :
 
@@ -132,7 +132,7 @@ appartient. Tu ne déploies rien.
 
    Il injecte `overlay.js` dans chaque page HTML qu'il sert, reçoit les commentaires sur
    `/__overlay/comments` et les écrit dans `.overlay/comments.json`. **Lis la ligne
-   `OVERLAY_URL=…` qu'il affiche** — il se décale de port tout seul si 4400 est pris — et
+   `OVERLAY_URL=…` qu'il affiche** (il se décale de port tout seul si 4400 est pris) et
    ne suppose jamais l'adresse.
 
    En mode proxy, il relaie aussi les WebSockets : le rechargement à chaud du framework
@@ -141,9 +141,9 @@ appartient. Tu ne déploies rien.
 3. **Ouvre `OVERLAY_URL` dans le panneau navigateur** (`preview_start` avec `url`). Regarde
    qu'il s'affiche, et que la barre en bas à droite est là. Si elle n'y est pas : la page
    n'est pas du HTML servi par le serveur (une application qui rend tout en JS depuis un
-   `index.html` vide l'est quand même — la barre apparaît).
+   `index.html` vide l'est quand même : la barre apparaît).
 
-4. **Arme le watcher** — outil `Monitor`, `persistent: true`, depuis le dossier du site :
+4. **Arme le watcher**, outil `Monitor`, `persistent: true`, depuis le dossier du site :
 
    ```bash
    F=".overlay/comments.json"
@@ -160,12 +160,12 @@ appartient. Tu ne déploies rien.
 5. Rends la main en **deux lignes** : l'URL, et « bascule la barre sur Édition et clique sur
    ce que tu veux changer ».
 
-## Phase 2 — Éditer
+## Phase 2 : Éditer
 
 Le watcher te réveille à chaque lot. Alors :
 
 1. Lis `.overlay/comments.json`, prends les lots `pending` **et passe-les tout de suite à
-   `en_cours`** — avant de lire quoi que ce soit. C'est ce qui arrête la comète de l'overlay
+   `en_cours`**, avant de lire quoi que ce soit. C'est ce qui arrête la comète de l'overlay
    et dit à l'utilisateur que tu as vu.
 2. Commit de sécurité.
 3. Applique **tous** les commentaires du lot.
@@ -182,14 +182,14 @@ autre clic, c'est plus rapide qu'une question.
 
 Chaque commentaire porte une cible. Dans l'ordre d'utilité :
 
-1. **`fichier`** — en mode statique, le serveur note **quel fichier HTML a servi la page**.
+1. **`fichier`** : en mode statique, le serveur note **quel fichier HTML a servi la page**.
    C'est direct : le code est là.
-2. **`srcFile`** — si le site vient de `/buildyoursite`, le `data-src` de l'ancêtre le plus
+2. **`srcFile`** : si le site vient de `/buildyoursite`, le `data-src` de l'ancêtre le plus
    proche donne le fichier source.
-3. **`classes`** puis **`text`** — un `Grep` sur la liste de classes ou sur le texte visible
+3. **`classes`** puis **`text`** : un `Grep` sur la liste de classes ou sur le texte visible
    tombe sur la bonne ligne dans un projet framework. Cherche dans le dossier des
    composants d'abord, jamais dans `node_modules` ni dans un dossier de build.
-4. **`selector`** — le chemin DOM, pour départager deux éléments identiques.
+4. **`selector`** : le chemin DOM, pour départager deux éléments identiques.
 
 Sur une copie miroir, le fichier est le HTML lui-même : les styles sont soit dans une feuille
 `.css` du dossier, soit en ligne. Modifie ce que tu trouves, ne réécris pas la page.
@@ -197,7 +197,7 @@ Sur une copie miroir, le fichier est le HTML lui-même : les styles sont soit da
 ## Pièges connus
 
 **Une entête `Content-Security-Policy` bloquerait le script injecté.** Le serveur la retire
-des réponses HTML — en local, pour l'édition, jamais ailleurs. Ne reporte pas cette
+des réponses HTML : en local, pour l'édition, jamais ailleurs. Ne reporte pas cette
 suppression dans le site.
 
 **En mode Édition, les clics sont interceptés** : la page ne navigue plus. Pour changer de

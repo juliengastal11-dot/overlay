@@ -13,7 +13,7 @@ Survol : la zone se surligne. Clic : elle se fige et une bulle s'ouvre. Vous éc
 vous voulez changer, vous pouvez joindre une image, vous validez. Les commentaires s'empilent
 avec une pastille numérotée, puis partent en lot. Claude se réveille et applique dans le code.
 
-C'est la phase d'édition du skill `buildyoursite`, extraite pour servir seule — sur
+C'est la phase d'édition du skill `buildyoursite`, extraite pour servir seule : sur
 n'importe quel site, quel que soit son framework, sans toucher à son code. Les deux
 s'installent séparément et ne dépendent pas l'un de l'autre.
 
@@ -43,8 +43,8 @@ installer : le serveur et l'overlay n'utilisent que la bibliothèque standard de
 ## Ce qu'il faut savoir
 
 **Il faut les fichiers.** Une URL est une image du site, pas son code. Le skill commence donc
-par obtenir un dossier : un chemin local, un dépôt à cloner, ou — si le site vous appartient
-et que vous n'avez que l'adresse — une copie téléchargée. Une copie est du HTML rendu, pas
+par obtenir un dossier : un chemin local, un dépôt à cloner, ou, si le site vous appartient
+et que vous n'avez que l'adresse, une copie téléchargée. Une copie est du HTML rendu, pas
 la source : parfaite pour un site statique ou un WordPress, un squelette pour un site généré
 en JavaScript. Le skill vous le dit.
 
@@ -55,15 +55,15 @@ en JavaScript. Le skill vous le dit.
 
 ## Comment ça marche
 
-Un petit serveur local sert votre site — directement pour un dossier statique, en proxy
-devant le serveur de dev pour un projet Next, Vite, Astro… — et injecte l'overlay dans chaque
+Un petit serveur local sert votre site (directement pour un dossier statique, en proxy
+devant le serveur de dev pour un projet Next, Vite, Astro…) et injecte l'overlay dans chaque
 page HTML. Le site ne sait pas qu'il est observé ; rien n'est ajouté à son code. Les
 commentaires arrivent dans `.overlay/comments.json`, un watcher réveille Claude.
 
 | | |
 |---|---|
 | `SKILL.md` | Le comportement : obtenir les fichiers, afficher, éditer |
-| `scripts/serveur-overlay.mjs` | Le serveur — statique ou proxy, avec injection |
+| `scripts/serveur-overlay.mjs` | Le serveur : statique ou proxy, avec injection |
 | `scripts/overlay.js` | L'overlay, en JavaScript pur, sans dépendance |
 | `scripts/miroir.mjs` | La copie locale d'un site qui vous appartient |
 | `references/mecanique.md` | Format des commentaires, watcher, détails du serveur |
@@ -98,4 +98,4 @@ tapez `/overlay`. Il n'y a rien d'autre à installer.
 
 ## Licence
 
-MIT — voir [LICENSE](LICENSE).
+MIT. Voir [LICENSE](LICENSE).

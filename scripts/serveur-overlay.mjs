@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ---------------------------------------------------------------------------
-   Serveur d'overlay — sert un site local et y injecte l'overlay d'édition.
+   Serveur d'overlay : sert un site local et y injecte l'overlay d'édition.
 
    Deux modes :
      --dossier <chemin>     site statique : sert les fichiers du dossier
@@ -72,7 +72,7 @@ const BALISE = '<script src="/__overlay/overlay.js" defer></script>';
  * Pose le script juste avant </body>. À défaut, avant </html>, à défaut à la fin.
  *
  * Une politique de sécurité (CSP) déclarée dans une balise <meta> bloquerait le
- * script injecté : on la retire. Uniquement ici, en local, pour l'édition — ce
+ * script injecté : on la retire. Uniquement ici, en local, pour l'édition. Ce
  * n'est pas une modification du site, seulement de ce que le panneau en voit.
  */
 function injecter(html) {
@@ -222,7 +222,7 @@ function relayer(req, res) {
     res.end(
       injecter(
         "<!doctype html><title>Amont injoignable</title><h1>Le serveur du site ne répond pas</h1>" +
-          "<p>" + cible + " — " + e.message + "</p><p>Est-il lancé ? Sur ce port ?</p>",
+          "<p>" + cible + " · " + e.message + "</p><p>Est-il lancé ? Sur ce port ?</p>",
       ),
     );
   });
@@ -231,7 +231,7 @@ function relayer(req, res) {
 }
 
 /**
- * WebSockets — indispensable pour le rechargement à chaud (Next, Vite).
+ * WebSockets : indispensable pour le rechargement à chaud (Next, Vite).
  * On ouvre la même connexion vers l'amont et on relie les deux prises.
  */
 function relayerUpgrade(req, prise, entete) {

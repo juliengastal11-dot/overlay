@@ -1,9 +1,9 @@
-# Overlay — mécanique
+# Overlay : mécanique
 
 ## Côté navigateur
 
 `scripts/overlay.js` est injecté par `scripts/serveur-overlay.mjs` dans chaque page HTML
-servie — jamais dans le code du site.
+servie. Jamais dans le code du site.
 
 - Survol → contour pointillé sur l'élément visé
 - Clic → sélection figée en trait plein, la bulle s'ouvre
@@ -13,14 +13,14 @@ servie — jamais dans le code du site.
 - `Alt+E` (ou la barre en bas à droite) → bascule Édition ⇄ Navigation
 
 En mode Édition les clics sont interceptés : la page ne navigue pas. Pour changer de page,
-l'utilisateur bascule en Navigation. Le mode et la position de la barre — déplaçable par son
-fond — sont retenus le temps de la session du navigateur.
+l'utilisateur bascule en Navigation. Le mode et la position de la barre (déplaçable par son
+fond) sont retenus le temps de la session du navigateur.
 
 Images : bouton 📎 ou **Ctrl+V** dans la bulle. Quatre maximum par commentaire.
 
 Deux modes d'envoi, dans la barre :
-- **Groupé** (défaut) — les commentaires s'empilent, « Envoyer — N » les envoie ensemble
-- **Changement immédiat** — chaque validation part seule
+- **Groupé** (défaut) : les commentaires s'empilent, « Envoyer · N » les envoie ensemble
+- **Changement immédiat** : chaque validation part seule
 
 Si la page porte déjà l'overlay de `/buildyoursite` (`[data-buildyoursite-ui]`), le script ne
 se monte pas.
@@ -61,7 +61,7 @@ serveur (`--racine`, sinon le dossier servi) :
 ```
 
 `fichier` n'existe qu'en mode statique : c'est le fichier HTML qui a servi `page`. En mode
-proxy, il vaut `null` — le code se retrouve par `srcFile`, les classes ou le texte.
+proxy, il vaut `null` : le code se retrouve par `srcFile`, les classes ou le texte.
 
 Les images jointes vont dans `.overlay/attachments/`. Le dossier `.overlay/` entier est à
 ignorer dans le git du site : ce sont des annotations de travail, pas une livraison.
@@ -79,7 +79,7 @@ Passer le lot à `en_cours` est donc la première chose à faire à chaque réve
 secondes sans réponse ressemblent à une panne.
 
 Une pastille se clique : le commentaire se rouvre, texte et images en place, pour être
-corrigé ou retiré. Sur écran tactile, le doigt posé surligne et le relâchement sélectionne —
+corrigé ou retiré. Sur écran tactile, le doigt posé surligne et le relâchement sélectionne :
 il n'y a pas de survol à émuler.
 
 ## Le watcher
@@ -107,7 +107,7 @@ Une ligne émise = un lot envoyé. Lire le fichier, traiter les lots `pending`, 
 | proxy | `--proxy http://localhost:3000 --racine <projet>` | relaie HTTP et WebSockets vers le serveur de dev, injecte dans les réponses HTML |
 
 Dans les deux modes : `/__overlay/overlay.js` sert le script, `/__overlay/ping` répond
-`{ ok, mode, racine }`. Port 4400 par défaut, décalé automatiquement s'il est pris —
+`{ ok, mode, racine }`. Port 4400 par défaut, décalé automatiquement s'il est pris :
 **lire `OVERLAY_URL=` dans la sortie**.
 
 Le serveur retire les entêtes et balises `Content-Security-Policy` des pages qu'il sert :
