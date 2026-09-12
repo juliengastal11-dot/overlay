@@ -178,6 +178,19 @@ Le watcher te réveille à chaque lot. Alors :
 Commentaire ambigu : prends la lecture la plus probable et applique-la. Il corrigera d'un
 autre clic, c'est plus rapide qu'une question.
 
+**Quand le commentaire demande une autre allure, pas une autre valeur.** « Cette section fait
+plate », « les cartes manquent de tenue » : là, il ne s'agit pas de changer un mot mais un
+agencement, et l'inventer de tête donne la même section en un peu différent. Si une
+bibliothèque de composants est branchée, cherche par le besoin, enregistre l'image de rendu
+d'une ou deux fiches et regarde-la. La recherche est gratuite et sans plafond ; c'est
+l'agencement qu'on vient y lire.
+
+Trois règles, les mêmes qu'à la construction. **Tu ne colles pas le code** : il porte des
+couleurs hors du thème du site et du texte de démonstration. **Tu rejoues l'agencement** avec
+les jetons et les composants déjà présents dans le projet. **Et la récupération du code
+source se compte**, deux par jour au palier gratuit : elle se demande à l'utilisateur avant,
+avec le chiffre du jour, ou ne se fait pas.
+
 ### Retrouver le code visé
 
 Chaque commentaire porte une cible. Dans l'ordre d'utilité :
