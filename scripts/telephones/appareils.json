@@ -1,0 +1,46 @@
+{
+  "$commentaire": "Géométrie des téléphones, en points (1 point = 1 pixel CSS). Écran, densité, barre d'état et dimensions du boîtier : fiches Apple et tableaux de développement, vérifiés le 2026-10-01. Rayon d'écran et position des boutons : relevés sur photos, approximatifs à un ou deux points près.",
+  "appareils": {
+    "standard": {
+      "nom": "iPhone 17",
+      "ecran": { "l": 402, "h": 874 },
+      "densite": 3,
+      "boitierMm": { "l": 71.5, "h": 149.6 },
+      "bordure": 14.8,
+      "tranche": 4.5,
+      "rayonEcran": 58,
+      "statut": 54,
+      "bas": 54,
+      "ile": { "l": 126, "h": 37, "haut": 11 },
+      "finition": "bleu-brume",
+      "boutons": [
+        { "cote": "gauche", "type": "action", "haut": 0.155, "hauteur": 0.042 },
+        { "cote": "gauche", "type": "volume", "haut": 0.218, "hauteur": 0.068 },
+        { "cote": "gauche", "type": "volume", "haut": 0.300, "hauteur": 0.068 },
+        { "cote": "droite", "type": "lateral", "haut": 0.218, "hauteur": 0.106 },
+        { "cote": "droite", "type": "camera", "haut": 0.585, "hauteur": 0.072 }
+      ]
+    },
+    "max": {
+      "nom": "iPhone 17 Pro Max",
+      "ecran": { "l": 440, "h": 956 },
+      "densite": 3,
+      "boitierMm": { "l": 78.0, "h": 163.4 },
+      "bordure": 15.3,
+      "tranche": 4.8,
+      "rayonEcran": 62,
+      "statut": 54,
+      "bas": 54,
+      "ile": { "l": 126, "h": 37, "haut": 11 },
+      "finition": "argent",
+      "boutons": [
+        { "cote": "gauche", "type": "action", "haut": 0.150, "hauteur": 0.040 },
+        { "cote": "gauche", "type": "volume", "haut": 0.210, "hauteur": 0.064 },
+        { "cote": "gauche", "type": "volume", "haut": 0.288, "hauteur": 0.064 },
+        { "cote": "droite", "type": "lateral", "haut": 0.210, "hauteur": 0.100 },
+        { "cote": "droite", "type": "camera", "haut": 0.590, "hauteur": 0.068 }
+      ]
+    }
+  },
+  "agentUtilisateur": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1 OverlayTelephone/1"
+}

@@ -16,6 +16,13 @@
    Options :
      --racine <chemin>      où écrire .overlay/ (défaut : le dossier servi, ou cwd)
      --port <n>             port de départ (défaut 4400 ; se décale s'il est pris)
+     --sans-overlay         n'injecter que la synchronisation des téléphones. Automatique
+                            sur un projet /buildyoursite, qui porte déjà son propre overlay
+
+   Chaque page reçoit aussi `synchro.js`, qui relie la fenêtre principale aux
+   téléphones flottants (scripts/telephones.mjs) : la fenêtre publie sa page et
+   son défilement sur POST /__overlay/synchro, les téléphones les reçoivent en
+   flux continu sur GET /__overlay/synchro.
 
    Affiche `OVERLAY_URL=http://localhost:<port>` une fois prêt. C'est cette
    ligne qu'il faut lire, jamais supposer le port.
@@ -63,8 +70,20 @@ const DOSSIER_OVERLAY = path.join(racine, ".overlay");
 const FICHIER_COMMENTAIRES = path.join(DOSSIER_OVERLAY, "comments.json");
 const DOSSIER_PIECES = path.join(DOSSIER_OVERLAY, "attachments");
 const SCRIPT_OVERLAY = path.join(ICI, "overlay.js");
+const SCRIPT_SYNCHRO = path.join(ICI, "synchro.js");
 
-const BALISE = '<script src="/__overlay/overlay.js" defer></script>';
+/* Un projet /buildyoursite rend son propre overlay, en React, après
+   l'hydratation : notre script, qui vérifie sa présence à son chargement,
+   arriverait avant lui et en monterait un second. On le reconnaît donc au
+   disque, et on n'injecte que la synchronisation. */
+const projetBuildyoursite = existsSync(path.join(racine, "components", "buildyoursite", "overlay.tsx"));
+const sansOverlay = args.includes("--sans-overlay") || projetBuildyoursite;
+
+// La synchronisation passe en premier : dans un téléphone, elle lève le drapeau
+// qui empêche overlay.js de se monter.
+const BALISE =
+  '<script src="/__overlay/synchro.js" defer></script>' +
+  (sansOverlay ? "" : '<script src="/__overlay/overlay.js" defer></script>');
 
 /* ------------------------------ injection -------------------------------- */
 
@@ -360,16 +379,74 @@ async function recevoirCommentaires(req, res) {
   json(res, 200, { ok: true, received: commentaires.length });
 }
 
+/* ------------------------- synchronisation ------------------------------- */
+
+/* Les téléphones s'abonnent en flux continu (Server-Sent Events). On garde la
+   dernière page et le dernier défilement : un téléphone qui arrive en cours de
+   route se cale aussitôt, sans attendre que la fenêtre principale bouge. */
+const abonnes = new Set();
+let dernierePage = null;
+let dernierDefilement = null;
+
+function diffuser(objet) {
+  const ligne = `data: ${JSON.stringify(objet)}\n\n`;
+  for (const r of abonnes) r.write(ligne);
+}
+
+function abonner(req, res) {
+  res.writeHead(200, {
+    "content-type": "text/event-stream; charset=utf-8",
+    "cache-control": "no-store",
+    connection: "keep-alive",
+    "x-accel-buffering": "no",
+  });
+  res.write(": synchro\n\n");
+  if (dernierePage) res.write(`data: ${JSON.stringify(dernierePage)}\n\n`);
+  if (dernierDefilement) res.write(`data: ${JSON.stringify(dernierDefilement)}\n\n`);
+  abonnes.add(res);
+  req.on("close", () => abonnes.delete(res));
+}
+
+async function publier(req, res) {
+  let e;
+  try {
+    e = JSON.parse(await lireCorps(req, 64 * 1024));
+  } catch {
+    return json(res, 400, { error: "json invalide" });
+  }
+  if (e.type === "page") {
+    // Une nouvelle page rend l'ancien défilement caduc.
+    if (!dernierePage || dernierePage.url !== e.url || dernierePage.id !== e.id) dernierDefilement = null;
+    dernierePage = e;
+  } else if (e.type === "defilement") {
+    dernierDefilement = e;
+  } else {
+    return json(res, 400, { error: "type inconnu" });
+  }
+  diffuser(e);
+  json(res, 200, { ok: true, telephones: abonnes.size });
+}
+
+// Un commentaire toutes les quinze secondes garde le flux ouvert à travers les
+// intermédiaires qui coupent les connexions silencieuses.
+setInterval(() => {
+  for (const r of abonnes) r.write(": .\n\n");
+}, 15000).unref();
+
 /* ------------------------------- serveur --------------------------------- */
 
 const serveur = http.createServer(async (req, res) => {
   try {
     const chemin = (req.url || "/").split("?")[0];
 
-    if (chemin === "/__overlay/overlay.js") {
-      const js = await readFile(SCRIPT_OVERLAY);
+    if (chemin === "/__overlay/overlay.js" || chemin === "/__overlay/synchro.js") {
+      const js = await readFile(chemin.endsWith("synchro.js") ? SCRIPT_SYNCHRO : SCRIPT_OVERLAY);
       res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
       return res.end(js);
+    }
+    if (chemin === "/__overlay/synchro") return req.method === "POST" ? publier(req, res) : abonner(req, res);
+    if (chemin === "/__overlay/synchro/etat") {
+      return json(res, 200, { telephones: abonnes.size, page: dernierePage, defilement: dernierDefilement });
     }
     if (chemin === "/__overlay/comments" && req.method === "POST") return recevoirCommentaires(req, res);
     if (chemin === "/__overlay/statut") {
@@ -412,7 +489,12 @@ serveur.on("error", (e) => {
 
 serveur.on("listening", () => {
   console.log(`[overlay] ${dossier ? "statique : " + dossier : "proxy → " + cible}`);
-  console.log(`[overlay] commentaires : ${FICHIER_COMMENTAIRES}`);
+  if (projetBuildyoursite) {
+    console.log("[overlay] projet /buildyoursite : son overlay est déjà dans le site, seule la synchronisation des téléphones est injectée");
+    console.log(`[overlay] commentaires : ${path.join(racine, ".buildyoursite", "comments.json")}`);
+  } else {
+    console.log(`[overlay] commentaires : ${FICHIER_COMMENTAIRES}`);
+  }
   console.log(`OVERLAY_URL=http://localhost:${port}`);
 });
 

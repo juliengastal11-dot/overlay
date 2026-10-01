@@ -17,6 +17,13 @@ C'est la phase d'édition du skill `buildyoursite`, extraite pour servir seule :
 n'importe quel site, quel que soit son framework, sans toucher à son code. Les deux
 s'installent séparément et ne dépendent pas l'un de l'autre.
 
+**Et deux iPhones flottent à côté.** Un iPhone 17 et un iPhone 17 Pro Max, boîtier et
+boutons compris, posés sur le bureau au-dessus des autres fenêtres. Chacun affiche la même
+page avec la fenêtre exacte du téléphone, et suit la vôtre : vous faites défiler, ils
+défilent ; vous changez de page, ils changent ; Claude modifie le code, ils se mettent à jour
+en direct. Vous modifiez toujours dans la fenêtre principale ; les téléphones montrent le
+rendu mobile. Une poignée en haut à droite de chacun permet de le déplacer où vous voulez.
+
 ---
 
 ## Démarrage rapide
@@ -35,8 +42,10 @@ s'installent séparément et ne dépendent pas l'un de l'autre.
 
 **3.** Ouvrez-le dans le dossier de votre site et tapez `/overlay`.
 
-Il faut **Node 20 ou plus** et le panneau navigateur de Claude Code. Rien d'autre à
-installer : le serveur et l'overlay n'utilisent que la bibliothèque standard de Node.
+Il faut **Node 20 ou plus** et le panneau navigateur de Claude Code. Le serveur et l'overlay
+n'utilisent que la bibliothèque standard de Node. Les téléphones, eux, ont besoin d'Electron :
+le skill l'installe tout seul à la première ouverture, environ 120 Mo à télécharger, une seule
+fois, dans `~/.claude/overlay/moteur`.
 
 ---
 
@@ -65,13 +74,21 @@ commentaires arrivent dans `.overlay/comments.json`, un watcher réveille Claude
 | `SKILL.md` | Le comportement : obtenir les fichiers, afficher, éditer |
 | `scripts/serveur-overlay.mjs` | Le serveur : statique ou proxy, avec injection |
 | `scripts/overlay.js` | L'overlay, en JavaScript pur, sans dépendance |
+| `scripts/synchro.js` | Ce qui relie votre fenêtre aux téléphones |
+| `scripts/telephones.mjs` | Les deux iPhones flottants |
+| `scripts/telephones/` | Leur boîtier, leur fiche technique, leur moteur |
 | `scripts/miroir.mjs` | La copie locale d'un site qui vous appartient |
-| `references/mecanique.md` | Format des commentaires, watcher, détails du serveur |
+| `references/mecanique.md` | Format des commentaires, watcher, serveur, téléphones |
 
 ## Prérequis
 
-Node 20 ou plus, et Claude Code avec son panneau navigateur. Aucune dépendance à installer :
-le serveur et l'overlay n'utilisent que la bibliothèque standard de Node.
+Node 20 ou plus, et Claude Code avec son panneau navigateur. Le serveur et l'overlay
+n'utilisent que la bibliothèque standard de Node. Les téléphones installent Electron à leur
+première ouverture, une seule fois.
+
+Les téléphones sont rendus par le moteur de Chrome, réglé sur l'iPhone : la mise en page, les
+points de rupture et le comportement tactile sont ceux du téléphone, le rendu des polices est
+celui de l'ordinateur. Pour une validation finale, un vrai iPhone reste la référence.
 
 ## Installation
 
@@ -94,7 +111,7 @@ git clone https://github.com/juliengastal11-dot/overlay ~/.claude/skills/overlay
 Sous Windows, le dossier des skills est `%USERPROFILE%\.claude\skills\overlay`.
 
 Dans les deux cas, redémarrez Claude Code, ouvrez-le dans le dossier de votre site, et
-tapez `/overlay`. Il n'y a rien d'autre à installer.
+tapez `/overlay`. Le moteur des téléphones s'installe de lui-même à la première ouverture.
 
 ## Licence
 

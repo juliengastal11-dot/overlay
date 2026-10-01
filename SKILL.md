@@ -1,6 +1,6 @@
 ---
 name: overlay
-description: Ouvre un site existant dans le panneau navigateur avec l'overlay d'édition visuelle (survol, clic, bulle de commentaire, pastilles numérotées, barre Navigation/Édition) puis applique les modifications demandées dans le code. Déclenché par /overlay suivi d'une URL ou d'un dossier, ou quand l'utilisateur veut éditer au clic un site qu'il a déjà.
+description: Ouvre un site existant dans le panneau navigateur avec l'overlay d'édition visuelle (survol, clic, bulle de commentaire, pastilles numérotées, barre Navigation/Édition) puis applique les modifications demandées dans le code. Deux iPhones flottants, standard et Pro Max, montrent en direct le rendu mobile de la même page. Déclenché par /overlay suivi d'une URL ou d'un dossier, ou quand l'utilisateur veut éditer au clic un site qu'il a déjà.
 ---
 
 # /overlay
@@ -36,8 +36,11 @@ quelque chose ?*
 |---|---|
 | Serveur d'overlay | `<skill>/scripts/serveur-overlay.mjs` |
 | L'overlay lui-même (JS pur, injecté) | `<skill>/scripts/overlay.js` |
+| Les deux iPhones flottants | `<skill>/scripts/telephones.mjs` |
+| Ce qui relie la fenêtre aux téléphones (JS pur, injecté) | `<skill>/scripts/synchro.js` |
+| Le moteur des téléphones, installé une fois | `~/.claude/overlay/moteur` |
 | Copie d'un site qui appartient à l'utilisateur | `<skill>/scripts/miroir.mjs` |
-| Mécanique, format des commentaires, watcher | `<skill>/references/mecanique.md` |
+| Mécanique, format des commentaires, watcher, téléphones | `<skill>/references/mecanique.md` |
 
 `<skill>` est le dossier de base annoncé au lancement. Ne le code jamais en dur.
 
@@ -63,9 +66,12 @@ Regarde ce qu'il contient, et choisis le mode :
 | `index.html` sans `package.json` | statique | `--dossier <chemin>` |
 | Rien de tout ça | demande | — |
 
-Un projet construit par `/buildyoursite` porte déjà son overlay : `/overlay` n'y ajoute rien
-(le script détecte l'existant et ne se monte pas deux fois). Lance simplement son serveur de
-dev et ouvre-le.
+Un projet construit par `/buildyoursite` porte déjà son overlay. **Passe quand même par le
+serveur d'overlay, en proxy**, comme pour un autre framework : c'est lui qui relie la fenêtre
+aux téléphones. Il reconnaît le projet au disque, n'injecte que la synchronisation, et
+l'overlay du site reste le seul à l'écran. Ses commentaires arrivent dans
+`.buildyoursite/comments.json`, et le serveur l'annonce au démarrage : c'est ce fichier que le
+watcher surveille.
 
 **Mais vérifie son âge d'abord.** Un site emporte une copie de l'overlay au moment de sa
 construction ; celle-ci ne se met jamais à jour toute seule. Si `/buildyoursite` est
@@ -143,7 +149,30 @@ appartient. Tu ne déploies rien.
    n'est pas du HTML servi par le serveur (une application qui rend tout en JS depuis un
    `index.html` vide l'est quand même : la barre apparaît).
 
-4. **Arme le watcher**, outil `Monitor`, `persistent: true`, depuis le dossier du site :
+4. **Ouvre les deux téléphones**, en arrière-plan (`run_in_background`) :
+
+   ```bash
+   node "<skill>/scripts/telephones.mjs" --url <OVERLAY_URL>
+   ```
+
+   Deux iPhones flottent sur le bureau, au-dessus des autres fenêtres : un iPhone 17 et un
+   iPhone 17 Pro Max, boîtier, boutons et île dynamique compris. Chacun affiche la page avec
+   la fenêtre exacte du téléphone, 402 et 440 pixels de large, tactile et sans survol. Ils
+   suivent la fenêtre principale : défilement, changement de page, rechargement. **On modifie
+   toujours dans la fenêtre principale** ; les téléphones ne portent pas l'overlay, ils
+   montrent.
+
+   **La première fois**, le script installe leur moteur, Electron : environ 120 Mo à
+   télécharger, dans `~/.claude/overlay/moteur`, hors du skill. Dis-le avant, en une ligne :
+   c'est gratuit et ça ne se refait pas.
+
+   Attends la ligne `[telephones] prêts` avant de rendre la main. Si l'écran est trop bas
+   pour un Pro Max à 100 %, les deux téléphones sont réduits ensemble et l'échelle s'affiche
+   sous chacun : la page garde sa largeur exacte, seul l'affichage rapetisse. `--echelle 1`
+   force la taille réelle, `--appareils max` n'en ouvre qu'un.
+
+5. **Arme le watcher**, outil `Monitor`, `persistent: true`, depuis le dossier du site. Sur
+   un projet `/buildyoursite`, remplace le fichier par `.buildyoursite/comments.json` :
 
    ```bash
    F=".overlay/comments.json"
@@ -157,8 +186,9 @@ appartient. Tu ne déploies rien.
 
    `description` : `commentaires overlay <nom du site>`.
 
-5. Rends la main en **deux lignes** : l'URL, et « bascule la barre sur Édition et clique sur
-   ce que tu veux changer ».
+6. Rends la main en **trois lignes** : l'URL ; « bascule la barre sur Édition et clique sur
+   ce que tu veux changer » ; « les deux iPhones suivent ta fenêtre, déplace-les par la
+   poignée en haut à droite de chacun ».
 
 ## Phase 2 : Éditer
 
@@ -177,6 +207,12 @@ Le watcher te réveille à chaque lot. Alors :
 
 Commentaire ambigu : prends la lecture la plus probable et applique-la. Il corrigera d'un
 autre clic, c'est plus rapide qu'une question.
+
+**Les téléphones se mettent à jour seuls.** En mode proxy, le rechargement à chaud du
+framework les atteint comme la fenêtre principale, sans recharger la page, et ils restent sur
+la même section. En mode statique, recharger la fenêtre principale les recharge avec elle.
+Rien à faire de ton côté, et ne leur fais pas défiler la page à la main : la fenêtre
+principale reprend la main au premier mouvement.
 
 **Quand le commentaire demande une autre allure, pas une autre valeur.** « Cette section fait
 plate », « les cartes manquent de tenue » : là, il ne s'agit pas de changer un mot mais un
@@ -228,6 +264,28 @@ lancer le proxy.
 
 **Les journaux réseau sont des historiques, pas des états.** Avant de conclure à un bug,
 refais l'appel.
+
+**Un panneau navigateur replié ne publie rien.** Il mesure zéro pixel : la synchronisation se
+tait plutôt que d'envoyer une position absurde. Les téléphones gardent la dernière bonne
+position et se recalent dès que le panneau réapparaît.
+
+**Ce sont des téléphones de Chrome, pas de Safari.** La mise en page, les points de rupture,
+`(hover: none)` et `(pointer: coarse)` sont ceux du téléphone. Le rendu des polices et la
+densité d'écran sont ceux de l'ordinateur. Pour une validation finale, un vrai iPhone reste la
+référence, et c'est à dire si la question se pose.
+
+**N'essaie pas l'émulation d'appareil de Chrome dans les téléphones.** Dans ce moteur, toute
+commande d'émulation dans une vue intégrée fait planter le processus, sans un message. La
+fenêtre exacte s'obtient par la taille de la vue et le zoom : c'est fait, et vérifié au pixel.
+
+**Fermer et rouvrir.** La croix de chaque téléphone le masque ; relancer la commande rouvre
+ceux qui manquent sans doubler les autres, et suit la nouvelle adresse si elle a changé. Les
+positions choisies à la main sont retenues d'une session à l'autre.
+
+**Vérifier ce que montrent les téléphones sans les regarder.** Relancer la commande avec
+`--capture <dossier>` enregistre une capture de chaque téléphone tel qu'il est à l'écran, sans
+les fermer. Avec `--journal` au lancement, chaque défilement et chaque chargement s'écrit dans
+la sortie, avec la largeur vue par la page.
 
 ## Ce que tu ne fais pas
 

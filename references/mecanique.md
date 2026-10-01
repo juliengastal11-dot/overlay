@@ -106,9 +106,58 @@ Une ligne émise = un lot envoyé. Lire le fichier, traiter les lots `pending`, 
 | statique | `--dossier <site>` | sert les fichiers, injecte dans les `.html`, note `fichier` dans chaque lot |
 | proxy | `--proxy http://localhost:3000 --racine <projet>` | relaie HTTP et WebSockets vers le serveur de dev, injecte dans les réponses HTML |
 
-Dans les deux modes : `/__overlay/overlay.js` sert le script, `/__overlay/ping` répond
-`{ ok, mode, racine }`. Port 4400 par défaut, décalé automatiquement s'il est pris :
-**lire `OVERLAY_URL=` dans la sortie**.
+Dans les deux modes : `/__overlay/overlay.js` et `/__overlay/synchro.js` servent les
+scripts, `/__overlay/ping` répond `{ ok, mode, racine }`. Port 4400 par défaut, décalé
+automatiquement s'il est pris : **lire `OVERLAY_URL=` dans la sortie**.
+
+Chaque page reçoit `synchro.js`, puis `overlay.js`, dans cet ordre. Sur un projet
+`/buildyoursite` (reconnu à `components/buildyoursite/overlay.tsx` sous `--racine`), seul
+`synchro.js` est injecté : le site rend déjà son propre overlay, après l'hydratation, et notre
+script arriverait trop tôt pour le voir. `--sans-overlay` force le même comportement.
+
+## Les téléphones
+
+`scripts/telephones.mjs --url <OVERLAY_URL>` ouvre deux fenêtres Electron transparentes et
+sans cadre : on ne voit que l'appareil. Chacune dessine le boîtier en HTML
+(`scripts/telephones/telephone.html`) et place dans l'écran une vue native qui charge le site
+à travers le serveur d'overlay.
+
+| Ce qui fait le téléphone | Comment |
+|---|---|
+| Largeur exacte (402 ou 440 px CSS) | la vue mesure largeur × échelle, le zoom vaut l'échelle ; chaque téléphone a sa session, pour que le zoom ne se partage pas |
+| Hauteur visible | écran moins la barre d'état (54 pt) et la barre de Safari réduite (54 pt) : 766 et 848 px |
+| Tactile, sans survol | réglages du moteur : `touch-events` et `blink-settings` (pointeur grossier, survol absent) |
+| Agent utilisateur | Safari sur iPhone, suivi du marqueur `OverlayTelephone/` |
+| Barre d'état | `theme-color` du site, sinon la couleur du haut de la page ; encre blanche ou noire selon la luminance |
+| Boîtier, boutons, île | `scripts/telephones/appareils.json`, en points, d'après les fiches Apple |
+
+**La synchronisation.** Dans la fenêtre principale, `synchro.js` publie sur
+`POST /__overlay/synchro` deux sortes de messages : `page` (adresse, et un identifiant de
+chargement qui change à chaque rechargement) et `defilement`. Les téléphones, reconnus à leur
+agent utilisateur, s'abonnent à `GET /__overlay/synchro` (flux continu). Le serveur garde le
+dernier de chaque : un téléphone qui arrive se cale aussitôt. `GET /__overlay/synchro/etat`
+montre ce qu'il garde et combien de téléphones écoutent.
+
+**Le défilement ne passe pas en pourcentage.** Une section deux fois plus haute sur téléphone
+fausserait tout. On envoie un repère : l'élément en haut de l'écran et le suivant (sections,
+titres, paragraphes, images, dans l'ordre du document), avec la fraction parcourue entre les
+deux. Le téléphone retrouve les deux mêmes éléments dans sa mise en page et se place entre eux.
+Il les reconnaît à leur place et à leur balise ; le texte ne sert qu'à départager quand un
+élément n'existe que sur un écran. Les éléments fixes ou collants sont écartés, sinon
+l'en-tête serait toujours « en haut ».
+
+**Dans un téléphone**, `synchro.js` lève le drapeau qui empêche `overlay.js` de se monter, et
+masque l'overlay d'un projet `/buildyoursite`. Le badge de développement de Next et la barre
+de défilement de Chrome sont masqués aussi : le téléphone montre le site tel qu'un visiteur
+le verrait.
+
+**Ce que le moteur refuse, appris en le construisant :**
+- toute commande d'émulation d'appareil dans une vue intégrée fait planter Electron 44, sans
+  message ; d'où la largeur obtenue par la taille de la vue et le zoom ;
+- un chemin Windows passé en argument séparé (`--option C:/…`) fait échouer son démarrage :
+  tous les arguments passent en `--option=valeur` ;
+- l'application Claude est elle-même un Electron : le lanceur retire `ELECTRON_RUN_AS_NODE`
+  de l'environnement, sinon le moteur démarrerait comme un simple Node, sans fenêtre.
 
 Le serveur retire les entêtes et balises `Content-Security-Policy` des pages qu'il sert :
 sans ça, un site un peu strict bloquerait le script injecté. C'est local et temporaire ; ne
