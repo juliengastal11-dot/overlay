@@ -7,9 +7,14 @@
        node telephones.mjs --installer           (installe le moteur, sans rien ouvrir)
 
    Les téléphones sont de vraies fenêtres, transparentes et sans cadre : on ne
-   voit que l'appareil, qui flotte sur le bureau, au-dessus des autres fenêtres.
-   Chacun affiche le site à travers le serveur d'overlay, en émulation exacte
-   du téléphone, et suit la fenêtre principale : défilement, page, rechargement.
+   voit que l'appareil, qui flotte sur le bureau, au-dessus des autres fenêtres,
+   à la taille d'un vrai iPhone. Chacun affiche le site à travers le serveur
+   d'overlay, avec la fenêtre exacte du téléphone, et suit la fenêtre
+   principale : défilement, page, rechargement.
+
+   Sous Windows, ecrans.ps1 mesure d'abord la taille physique des écrans et la
+   place de la fenêtre de Claude : c'est ce qui donne la taille réelle, et ce
+   qui pose les téléphones à côté de Claude plutôt que dessus.
 
    Le moteur est Electron. Il s'installe une seule fois, hors du skill, dans
    ~/.claude/overlay/moteur (environ 120 Mo à télécharger, 370 Mo sur disque),
@@ -20,7 +25,8 @@
 
    Options transmises au moteur :
      --appareils standard,max   lesquels ouvrir (défaut : les deux)
-     --echelle 0.8              forcer l'échelle d'affichage (défaut : 1, réduite si l'écran est trop petit)
+     --echelle 1.5              multiple de la taille réelle (défaut : 1, réduite si l'écran est trop bas)
+     --diagonale 27             diagonale de l'écran en pouces, si la mesure manque ou se trompe
      --journal                  écrire défilements et chargements sur la sortie
      --capture <dossier>        enregistrer une capture de chaque téléphone après 4 s
      --quitter                  quitter après la capture
@@ -114,13 +120,45 @@ if (!url || url === true) {
 // Toujours `--nom=valeur` : un chemin Windows passé en argument séparé fait
 // échouer le démarrage d'Electron, sans un message.
 const passe = ["--tel-url=" + url];
-const correspondances = { appareils: "tel-appareils", echelle: "tel-echelle", capture: "tel-capture", "capture-delai": "tel-capture-delai" };
+const correspondances = {
+  appareils: "tel-appareils",
+  echelle: "tel-echelle",
+  diagonale: "tel-diagonale",
+  capture: "tel-capture",
+  "capture-delai": "tel-capture-delai",
+};
 for (const [nom, cible] of Object.entries(correspondances)) {
   const v = opt(nom);
   if (v && v !== true) passe.push(`--${cible}=${v}`);
 }
 if (opt("journal")) passe.push("--tel-journal");
 if (opt("quitter")) passe.push("--tel-quitter");
+
+/* La taille physique des écrans et la fenêtre de Claude. Sans elles, les
+   téléphones s'ouvrent quand même, à une taille estimée, et le disent. */
+function mesurerEcrans() {
+  if (process.platform !== "win32") return null;
+  const r = spawnSync(
+    "powershell",
+    ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", path.join(ICI, "telephones", "ecrans.ps1")],
+    { encoding: "utf8", timeout: 20000, windowsHide: true },
+  );
+  try {
+    return JSON.parse(String(r.stdout || "").trim().split(/\r?\n/).pop());
+  } catch {
+    return null;
+  }
+}
+const mesures = mesurerEcrans();
+if (mesures) {
+  const ecrans = (mesures.ecrans || []).filter((e) => e && e.l > 0 && e.h > 0);
+  if (ecrans.length) passe.push("--tel-ecrans=" + ecrans.map((e) => [e.x, e.y, e.l, e.h, e.mmL, e.mmH].join(":")).join(";"));
+  const c = mesures.claude;
+  if (c && c.l > 0 && c.h > 0) passe.push("--tel-claude=" + [c.x, c.y, c.l, c.h].join(":"));
+  if (opt("journal")) {
+    for (const e of ecrans) console.log(`[telephones] écran ${e.modele || "?"} : ${e.l} × ${e.h} px, ${e.mmL} × ${e.mmH} mm`);
+  }
+}
 
 // L'application Claude est elle-même construite sur Electron : si cette variable
 // a fuité dans l'environnement, notre binaire démarrerait comme un simple Node,

@@ -188,8 +188,11 @@
   }
   .commandes button:hover { background: rgba(255, 255, 255, 0.14); }
   .commandes button:focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
-  .poignee { -webkit-app-region: drag; cursor: grab; }
-  .fermer { -webkit-app-region: no-drag; }
+  /* Une poignée ordinaire, déplacée par le script : la zone de glisser de
+     Windows ne recevait pas le survol, et le clic traversait le téléphone. */
+  .poignee { cursor: grab; touch-action: none; }
+  .glisse, .glisse .poignee { cursor: grabbing; }
+  .glisse .commandes { opacity: 1; }
   .commandes svg { width: 14px; height: 14px; fill: currentColor; }
 
   .legende {
@@ -200,7 +203,7 @@
     pointer-events: none;
   }
   .legende span {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
     padding: 5px 9px;
     border-radius: 999px;
@@ -260,101 +263,122 @@
 <script>
   "use strict";
   const q = new URLSearchParams(location.search);
-  const G = JSON.parse(q.get("g"));
-  const k = G.k;
   const $ = (id) => document.getElementById(id);
   const px = (v) => Math.round(v) + "px";
   const place = (el, x, y, l, h) => Object.assign(el.style, { left: px(x), top: px(y), width: px(l), height: px(h) });
+  const virgule = (n) => String(Math.round(n * 100) / 100).replace(".", ",");
 
-  document.documentElement.dataset.finition = G.finition;
-
-  /* ---------------------------- le boîtier ---------------------------- */
-  const B = G.boitier;
-  place($("appareil"), B.x, B.y, B.l, B.h);
-  $("appareil").style.borderRadius = px(B.r);
-  $("tranche").style.borderRadius = px(B.r);
-
-  const t = G.tranche;
-  const verre = $("verre");
-  place(verre, t, t, B.l - 2 * t, B.h - 2 * t);
-  verre.style.borderRadius = px(B.r - t);
-
-  const E = G.ecran;
-  const ecran = $("ecran");
-  place(ecran, E.x - B.x, E.y - B.y, E.l, E.h);
-  ecran.style.borderRadius = px(E.r);
-
-  /* --------------------- barre d'état, Safari, île --------------------- */
-  const hautStatut = G.vue.y - E.y;
-  const hautBas = E.y + E.h - (G.vue.y + G.vue.h);
-  place($("statut"), 0, 0, E.l, hautStatut);
-  place($("bas"), 0, G.vue.y + G.vue.h - E.y, E.l, hautBas);
-
-  const I = G.ile;
-  const ile = $("ile");
-  place(ile, (E.l - I.l) / 2, I.haut, I.l, I.h);
-  ile.style.borderRadius = px(I.h / 2);
-  const dl = I.h * 0.34;
-  place($("lentille"), I.l - I.h * 0.5 - dl / 2, (I.h - dl) / 2, dl, dl);
-
-  // L'heure au centre de l'oreille gauche, les indicateurs au centre de la droite,
-  // tous deux alignés sur le milieu de l'île : la disposition d'iOS.
-  const oreille = (E.l - I.l) / 2;
-  const milieu = I.haut + I.h / 2;
+  const appareil = $("appareil");
   const heure = $("heure");
-  heure.style.fontSize = (17 * k).toFixed(2) + "px";
-  heure.style.lineHeight = (22 * k).toFixed(2) + "px";
-  place(heure, oreille * 0.12, milieu - 11 * k, oreille * 0.88, 22 * k);
-  const ind = $("indicateurs");
-  ind.style.gap = (6 * k).toFixed(2) + "px";
-  place(ind, E.l - oreille, milieu - 7 * k, oreille * 0.92, 14 * k);
-  $("reseau").style.width = (18 * k).toFixed(2) + "px";
-  $("wifi").style.width = (16 * k).toFixed(2) + "px";
-  $("batterie").style.width = (27 * k).toFixed(2) + "px";
+  $("domaine").textContent = q.get("domaine") || "localhost";
 
-  const domaine = $("domaine");
-  domaine.textContent = q.get("domaine") || "localhost";
-  domaine.style.fontSize = (13 * k).toFixed(2) + "px";
-  domaine.style.top = px(9 * k);
-  const accueil = $("accueil");
-  Object.assign(accueil.style, {
-    width: px((G.largeurCss >= 430 ? 144 : 136) * k),
-    height: px(5 * k),
-    bottom: px(8 * k),
-  });
+  /** Tout le dessin vient de G, calculé par le processus principal. Il se refait
+      quand le téléphone passe sur un écran d'une autre densité : même taille en
+      millimètres, autre nombre de pixels. */
+  function disposer(G) {
+    const k = G.k;
+    document.documentElement.dataset.finition = G.finition;
 
-  /* ------------------------------ boutons ------------------------------ */
-  for (const b of G.boutons) {
-    const el = document.createElement("div");
-    // Un bouton d'iPhone dépasse de la tranche d'environ trois quarts de millimètre :
-    // un peu plus de 4 points. La Commande de l'appareil photo, elle, affleure.
-    const sortie = (b.type === "camera" ? 2.2 : 4.8) * k;
-    const epaisseur = sortie + 3.2 * k;
-    el.className = "bouton " + b.cote + (b.type === "camera" ? " camera" : "");
-    const x = b.cote === "gauche" ? -sortie : B.l - epaisseur + sortie;
-    place(el, x, b.y - B.y, epaisseur, b.h);
-    el.style.borderRadius = b.cote === "gauche"
-      ? `${px(2.2 * k)} 0 0 ${px(2.2 * k)}`
-      : `0 ${px(2.2 * k)} ${px(2.2 * k)} 0`;
-    $("appareil").insertBefore(el, $("tranche"));
+    /* ---------------------------- le boîtier ---------------------------- */
+    const B = G.boitier;
+    place(appareil, B.x, B.y, B.l, B.h);
+    appareil.style.borderRadius = px(B.r);
+    $("tranche").style.borderRadius = px(B.r);
+    // L'ombre suit la taille de l'appareil : fixe, elle écrasait un téléphone
+    // dessiné à sa taille réelle.
+    appareil.style.filter =
+      `drop-shadow(0 ${(22 * k).toFixed(1)}px ${(26 * k).toFixed(1)}px rgba(0, 0, 0, 0.30)) ` +
+      `drop-shadow(0 ${(5 * k).toFixed(1)}px ${(9 * k).toFixed(1)}px rgba(0, 0, 0, 0.26))`;
+
+    const t = G.tranche;
+    const verre = $("verre");
+    place(verre, t, t, B.l - 2 * t, B.h - 2 * t);
+    verre.style.borderRadius = px(B.r - t);
+
+    const E = G.ecran;
+    const ecran = $("ecran");
+    place(ecran, E.x - B.x, E.y - B.y, E.l, E.h);
+    ecran.style.borderRadius = px(E.r);
+
+    /* --------------------- barre d'état, Safari, île --------------------- */
+    const hautStatut = G.vue.y - E.y;
+    const hautBas = E.y + E.h - (G.vue.y + G.vue.h);
+    place($("statut"), 0, 0, E.l, hautStatut);
+    place($("bas"), 0, G.vue.y + G.vue.h - E.y, E.l, hautBas);
+
+    const I = G.ile;
+    const ile = $("ile");
+    place(ile, (E.l - I.l) / 2, I.haut, I.l, I.h);
+    ile.style.borderRadius = px(I.h / 2);
+    const dl = I.h * 0.34;
+    place($("lentille"), I.l - I.h * 0.5 - dl / 2, (I.h - dl) / 2, dl, dl);
+
+    // L'heure au centre de l'oreille gauche, les indicateurs au centre de la droite,
+    // tous deux alignés sur le milieu de l'île : la disposition d'iOS.
+    const oreille = (E.l - I.l) / 2;
+    const milieu = I.haut + I.h / 2;
+    heure.style.fontSize = (17 * k).toFixed(2) + "px";
+    heure.style.lineHeight = (22 * k).toFixed(2) + "px";
+    place(heure, oreille * 0.12, milieu - 11 * k, oreille * 0.88, 22 * k);
+    const ind = $("indicateurs");
+    ind.style.gap = (6 * k).toFixed(2) + "px";
+    place(ind, E.l - oreille, milieu - 7 * k, oreille * 0.92, 14 * k);
+    $("reseau").style.width = (18 * k).toFixed(2) + "px";
+    $("wifi").style.width = (16 * k).toFixed(2) + "px";
+    $("batterie").style.width = (27 * k).toFixed(2) + "px";
+
+    const domaine = $("domaine");
+    domaine.style.fontSize = (13 * k).toFixed(2) + "px";
+    domaine.style.top = px(9 * k);
+    Object.assign($("accueil").style, {
+      width: px((G.largeurCss >= 430 ? 144 : 136) * k),
+      height: px(Math.max(2, 5 * k)),
+      bottom: px(8 * k),
+    });
+
+    /* ------------------------------ boutons ------------------------------ */
+    for (const el of appareil.querySelectorAll(".bouton")) el.remove();
+    for (const b of G.boutons) {
+      const el = document.createElement("div");
+      // Un bouton d'iPhone dépasse de la tranche d'environ trois quarts de
+      // millimètre ; la Commande de l'appareil photo, elle, affleure. Trois
+      // pixels au moins, sans quoi la taille réelle les effaçait presque.
+      const sortie = b.type === "camera" ? Math.max(2, 2.2 * k) : Math.max(3, 4.8 * k);
+      const epaisseur = sortie + Math.max(2, 3.2 * k);
+      const rayon = px(Math.max(1.5, 2.2 * k));
+      el.className = "bouton " + b.cote + (b.type === "camera" ? " camera" : "");
+      const x = b.cote === "gauche" ? -sortie : B.l - epaisseur + sortie;
+      place(el, x, b.y - B.y, epaisseur, b.h);
+      el.style.borderRadius = b.cote === "gauche" ? `${rayon} 0 0 ${rayon}` : `0 ${rayon} ${rayon} 0`;
+      appareil.insertBefore(el, $("tranche"));
+    }
+
+    /* -------------------- ombre au sol, commandes, légende -------------------- */
+    const sol = $("sol");
+    place(sol, B.x + B.l * 0.14, B.y + B.h + 14 * k, B.l * 0.72, 30 * k);
+    sol.style.filter = `blur(${Math.max(2, 5 * k).toFixed(1)}px)`;
+
+    const commandes = $("commandes");
+    commandes.style.left = px(B.x + B.l - 64);
+    commandes.style.top = px(B.y - 44);
+
+    const legende = $("legende");
+    place(legende, B.x, B.y + B.h + 30, B.l, 24);
+    const T = G.taille;
+    let taille;
+    if (T.reduit) taille = "réduit à " + Math.round(T.facteur * 100) + " %";
+    else if (Math.abs(T.facteur - 1) < 0.02) taille = T.source === "defaut" ? "taille estimée" : "taille réelle";
+    else taille = "taille réelle × " + virgule(T.facteur);
+    legende.replaceChildren();
+    for (const m of [G.nom, G.largeurCss + " px", taille]) {
+      const s = document.createElement("span");
+      s.textContent = m;
+      legende.appendChild(s);
+    }
   }
 
-  /* -------------------- ombre au sol, commandes, légende -------------------- */
-  place($("sol"), B.x + B.l * 0.14, B.y + B.h + 14 * k, B.l * 0.72, 30 * k);
-
-  const commandes = $("commandes");
-  commandes.style.left = px(B.x + B.l - 64);
-  commandes.style.top = px(B.y - 44);
-
-  const legende = $("legende");
-  place(legende, B.x, B.y + B.h + 50 * k, B.l, 24);
-  const morceaux = [G.nom, G.largeurCss + " px"];
-  if (k < 0.995) morceaux.push("affiché à " + Math.round(k * 100) + " %");
-  for (const m of morceaux) {
-    const s = document.createElement("span");
-    s.textContent = m;
-    legende.appendChild(s);
-  }
+  disposer(JSON.parse(q.get("g")));
+  window.telephone.surGeometrie(disposer);
 
   /* -------------------- teinte de la page, heure réelle -------------------- */
   const sondeur = document.createElement("canvas").getContext("2d");
@@ -389,14 +413,46 @@
 
   /* ---------------- les clics traversent la marge transparente ---------------- */
   let traverse = null;
+  let glisse = false;
   const regler = (oui) => {
     if (oui !== traverse) {
       traverse = oui;
       window.telephone.traverser(oui);
     }
   };
-  document.addEventListener("mousemove", (e) => regler(!e.target.closest("[data-solide]")));
-  document.addEventListener("mouseleave", () => regler(true));
+  // Pendant un déplacement, la fenêtre garde la souris quoi qu'il arrive : si
+  // elle laissait passer les clics, le relâchement tomberait ailleurs.
+  document.addEventListener("mousemove", (e) => {
+    if (!glisse) regler(!e.target.closest("[data-solide]"));
+  });
+  document.addEventListener("mouseleave", () => {
+    if (!glisse) regler(true);
+  });
+
+  /* ------------------------------ la poignée ------------------------------ */
+  const poignee = document.querySelector(".poignee");
+  poignee.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    glisse = true;
+    regler(false);
+    poignee.setPointerCapture(e.pointerId);
+    document.body.classList.add("glisse");
+    window.telephone.glisserDebut();
+  });
+  poignee.addEventListener("pointermove", () => {
+    if (glisse) window.telephone.glisser();
+  });
+  const finir = () => {
+    if (!glisse) return;
+    glisse = false;
+    document.body.classList.remove("glisse");
+    window.telephone.glisserFin();
+  };
+  poignee.addEventListener("pointerup", finir);
+  poignee.addEventListener("pointercancel", finir);
+  poignee.addEventListener("lostpointercapture", finir);
+  window.addEventListener("blur", finir);
 
   $("fermer").addEventListener("click", () => window.telephone.fermer());
 </script>

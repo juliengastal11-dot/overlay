@@ -124,8 +124,11 @@ sans cadre : on ne voit que l'appareil. Chacune dessine le boîtier en HTML
 
 | Ce qui fait le téléphone | Comment |
 |---|---|
-| Largeur exacte (402 ou 440 px CSS) | la vue mesure largeur × échelle, le zoom vaut l'échelle ; chaque téléphone a sa session, pour que le zoom ne se partage pas |
+| Taille réelle, au millimètre | `telephones/ecrans.ps1` lit la taille physique de chaque écran dans son EDID (WMI, sans droits d'administrateur) ; l'échelle vaut 0,166 mm par point multiplié par les pixels par millimètre de l'écran où se trouve le téléphone, et se recalcule quand on le pose sur un autre écran |
+| Fenêtre exacte (402 × 766, 440 × 848 px CSS) | la page voit la taille de la vue divisée par le zoom, arrondie vers le bas : `calage()` cherche une largeur et une hauteur entières, et un zoom au milieu de l'intervalle où les deux divisions tombent juste. Chaque téléphone a sa session, pour que le zoom ne se partage pas |
 | Hauteur visible | écran moins la barre d'état (54 pt) et la barre de Safari réduite (54 pt) : 766 et 848 px |
+| Place à l'ouverture | à côté de la fenêtre de Claude (trouvée par `ecrans.ps1`), sur le premier écran où ils tiennent sans la couvrir ; ensuite, la dernière place choisie, retenue dans `~/.claude/overlay/telephones.json` |
+| Poignée | déplacement par script : la page signale début, mouvements et fin, le moteur lit le curseur et déplace la fenêtre |
 | Tactile, sans survol | réglages du moteur : `touch-events` et `blink-settings` (pointeur grossier, survol absent) |
 | Agent utilisateur | Safari sur iPhone, suivi du marqueur `OverlayTelephone/` |
 | Barre d'état | `theme-color` du site, sinon la couleur du haut de la page ; encre blanche ou noire selon la luminance |
@@ -137,6 +140,43 @@ chargement qui change à chaque rechargement) et `defilement`. Les téléphones,
 agent utilisateur, s'abonnent à `GET /__overlay/synchro` (flux continu). Le serveur garde le
 dernier de chaque : un téléphone qui arrive se cale aussitôt. `GET /__overlay/synchro/etat`
 montre ce qu'il garde et combien de téléphones écoutent.
+
+**L'état du navigateur.** Troisième message, `stockage`. La fenêtre principale envoie son
+localStorage quand il change (valeurs de plus de 32 Ko exclues) ; le serveur y joint les
+cookies lus dans l'entête `Cookie` de chacun de ses envois, HttpOnly compris, et diffuse
+`{ type: "stockage", cookies, local, version }` quand l'un ou l'autre change. Le téléphone
+recopie cookies et clés, efface ceux qui venaient de la fenêtre principale et n'y sont plus,
+et se recharge si un changement se voit. Ne comptent pas : les clés des outils de mesure
+d'audience (`_ga`, `_fbp`, `ph_`…), celles du serveur de développement (`__next`), et un
+changement qui ne porte que sur de longues suites de chiffres (horodatage). La version
+appliquée est notée dans le sessionStorage du téléphone : une même version ne recharge
+jamais deux fois. `/__overlay/synchro/etat` liste les noms des cookies et des clés, jamais
+leurs valeurs.
+
+**Les gestes.** Quatre messages de plus, transmis et oubliés (un vieux clic rejoué à un
+téléphone qui arrive refermerait ce qui est ouvert) : `clic`, `saisie`, `touche`,
+`defilement-element`. Seulement les vrais gestes (`isTrusted`), hors de l'interface
+d'édition et hors du mode Édition (`buildyoursite:mode` ou `overlay:mode` à `edition` dans
+le sessionStorage). L'élément visé est le plus proche ancêtre qui réagit au clic ; il est
+décrit par sa balise, ses attributs stables, son texte, son rang parmi ses semblables et son
+chemin depuis `<body>`. Le téléphone le retrouve par le chemin si rien n'a bougé, sinon par
+le rang. Le clic porte l'état d'avant (coché, `open` d'un `<details>`, `aria-expanded`,
+`aria-selected`, `data-state`), lu dès l'appui : le téléphone ne touche que s'il est dans le
+même. Le toucher rejoué suit l'ordre d'un iPhone : `pointerdown`, `touchstart`, `pointerup`,
+`touchend`, puis `mousedown`, `mouseup`, `click`, sauf si la page annule `touchend`. Les
+liens qui naviguent ne sont pas rejoués : la page suit déjà.
+
+**Les envois.** En mode proxy, une requête qui modifie (tout sauf GET, HEAD, OPTIONS) venue
+de la fenêtre principale garde sa réponse quinze secondes. La même requête venue d'un
+téléphone (même méthode, même adresse, même `Next-Action`) reçoit cette réponse, une fois
+par téléphone, sans atteindre le site ; arrivée pendant que le site répond, elle l'attend.
+Les téléphones se distinguent par leur nom, à la fin de leur agent utilisateur.
+
+**Le hasard.** Chaque page reçoit, juste après `<head>`, un `Math.random` à graine qui
+s'efface aussitôt exécuté : resté dans la page, il prenait la place du premier script du
+site à l'hydratation de React, et Next signalait une erreur. Un chargement de page de la
+fenêtre principale tire une graine neuve ; les téléphones reçoivent la même. Le tirage
+repart de l'adresse après une navigation sans rechargement (`__overlayHasard`).
 
 **Le défilement ne passe pas en pourcentage.** Une section deux fois plus haute sur téléphone
 fausserait tout. On envoie un repère : l'élément en haut de l'écran et le suivant (sections,
@@ -157,7 +197,18 @@ le verrait.
 - un chemin Windows passé en argument séparé (`--option C:/…`) fait échouer son démarrage :
   tous les arguments passent en `--option=valeur` ;
 - l'application Claude est elle-même un Electron : le lanceur retire `ELECTRON_RUN_AS_NODE`
-  de l'environnement, sinon le moteur démarrerait comme un simple Node, sans fenêtre.
+  de l'environnement, sinon le moteur démarrerait comme un simple Node, sans fenêtre ;
+- la zone de glisser de Windows (`-webkit-app-region: drag`) ne reçoit pas le survol : dans
+  une fenêtre qui laisse passer les clics hors de l'appareil, elle ne s'activait jamais ;
+- une seconde instance qui appelle `app.quit()` devient prête quand même et ouvre ses
+  téléphones avant de partir : elle sort par `app.exit(0)` ;
+- le niveau `floating` de `setAlwaysOnTop` range la fenêtre derrière la barre des tâches ;
+  une capture d'écran qui déplace la barre lui fait perdre son premier plan. Niveau
+  `pop-up-menu`, et une veille chaque seconde.
+
+Un point par pixel, comme dans la première version, donnait des téléphones une fois et demie
+à deux fois trop grands : un point d'iPhone mesure 0,166 mm, un pixel de moniteur entre 0,2
+et 0,3. D'où la mesure physique des écrans.
 
 Le serveur retire les entêtes et balises `Content-Security-Policy` des pages qu'il sert :
 sans ça, un site un peu strict bloquerait le script injecté. C'est local et temporaire ; ne

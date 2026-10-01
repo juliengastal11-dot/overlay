@@ -18,11 +18,14 @@ n'importe quel site, quel que soit son framework, sans toucher à son code. Les 
 s'installent séparément et ne dépendent pas l'un de l'autre.
 
 **Et deux iPhones flottent à côté.** Un iPhone 17 et un iPhone 17 Pro Max, boîtier et
-boutons compris, posés sur le bureau au-dessus des autres fenêtres. Chacun affiche la même
-page avec la fenêtre exacte du téléphone, et suit la vôtre : vous faites défiler, ils
-défilent ; vous changez de page, ils changent ; Claude modifie le code, ils se mettent à jour
-en direct. Vous modifiez toujours dans la fenêtre principale ; les téléphones montrent le
-rendu mobile. Une poignée en haut à droite de chacun permet de le déplacer où vous voulez.
+boutons compris, posés sur le bureau au-dessus des autres fenêtres, à la taille d'un vrai
+iPhone : sous Windows, la taille physique de l'écran est mesurée, et un iPhone posé contre
+l'écran couvre exactement le sien. Chacun affiche la même page avec la fenêtre exacte du
+téléphone, et suit la vôtre : vous faites défiler, ils défilent ; vous changez de page, ils
+changent ; Claude modifie le code, ils se mettent à jour en direct. Vous modifiez toujours
+dans la fenêtre principale ; les téléphones montrent le rendu mobile. Ils s'ouvrent à côté
+de la fenêtre de Claude, et une poignée en haut à droite de chacun permet de les déplacer
+où vous voulez.
 
 ---
 

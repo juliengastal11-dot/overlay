@@ -149,6 +149,15 @@ appartient. Tu ne déploies rien.
    n'est pas du HTML servi par le serveur (une application qui rend tout en JS depuis un
    `index.html` vide l'est quand même : la barre apparaît).
 
+   **Puis vérifie que le panneau est visible** : `tabs_context` le dit en dernière ligne.
+   `preview_start` peut ouvrir l'onglet dans un panneau masqué, et rien ne le montre de ce
+   côté-ci : l'utilisateur ne voit alors que les téléphones, et ceux-ci ne bougent pas, car
+   une fenêtre masquée ne publie rien. Constaté le 2026-10-01. S'il est masqué, dis-le en
+   une ligne : « Affichez le navigateur avec l'icône globe, en haut à droite de la
+   conversation. » Tu ne peux pas l'afficher toi-même. Ferme aussi les onglets en trop
+   (`tabs_close`) : un seul onglet sur le site, sinon deux fenêtres principales se disputent
+   les téléphones.
+
 4. **Ouvre les deux téléphones**, en arrière-plan (`run_in_background`) :
 
    ```bash
@@ -156,23 +165,33 @@ appartient. Tu ne déploies rien.
    ```
 
    Deux iPhones flottent sur le bureau, au-dessus des autres fenêtres : un iPhone 17 et un
-   iPhone 17 Pro Max, boîtier, boutons et île dynamique compris. Chacun affiche la page avec
-   la fenêtre exacte du téléphone, 402 et 440 pixels de large, tactile et sans survol. Ils
-   suivent la fenêtre principale : défilement, changement de page, rechargement. **On modifie
-   toujours dans la fenêtre principale** ; les téléphones ne portent pas l'overlay, ils
-   montrent.
+   iPhone 17 Pro Max, boîtier, boutons et île dynamique compris, **à la taille d'un vrai
+   iPhone, au millimètre** : posé contre l'écran, un iPhone 17 couvre exactement le sien.
+   Chacun affiche la page avec la fenêtre exacte du téléphone, 402 × 766 et 440 × 848 pixels
+   CSS, tactile et sans survol. Ils suivent la fenêtre principale : défilement, changement de
+   page, rechargement. **On modifie toujours dans la fenêtre principale** ; les téléphones ne
+   portent pas l'overlay, ils montrent.
+
+   La taille réelle vient de la mesure physique de chaque écran, lue dans sa fiche EDID par
+   `telephones/ecrans.ps1` (Windows). Le même script trouve la fenêtre de Claude : les
+   téléphones s'ouvrent à côté d'elle, sur le premier écran où ils tiennent sans la couvrir,
+   et sur son bord gauche sinon. Posé sur un autre écran, un téléphone se recalcule pour
+   garder sa taille en millimètres. Sans mesure (autre système, écran muet), ils s'ouvrent à
+   une taille estimée et la légende dit « taille estimée » : `--diagonale 27` donne la
+   diagonale en pouces. `--echelle 1.5` les agrandit par rapport à la taille réelle,
+   `--appareils max` n'en ouvre qu'un.
 
    **La première fois**, le script installe leur moteur, Electron : environ 120 Mo à
    télécharger, dans `~/.claude/overlay/moteur`, hors du skill. Dis-le avant, en une ligne :
    c'est gratuit et ça ne se refait pas.
 
-   Attends la ligne `[telephones] prêts` avant de rendre la main. Si l'écran est trop bas
-   pour un Pro Max à 100 %, les deux téléphones sont réduits ensemble et l'échelle s'affiche
-   sous chacun : la page garde sa largeur exacte, seul l'affichage rapetisse. `--echelle 1`
-   force la taille réelle, `--appareils max` n'en ouvre qu'un.
+   Attends la ligne `[telephones] prêts` avant de rendre la main : elle dit aussi s'ils sont
+   à la taille réelle, estimée ou réduite.
 
-5. **Arme le watcher**, outil `Monitor`, `persistent: true`, depuis le dossier du site. Sur
-   un projet `/buildyoursite`, remplace le fichier par `.buildyoursite/comments.json` :
+5. **Arme le watcher**, outil `Monitor`, depuis le dossier du site, avec le délai maximal
+   (`timeout_ms: 1800000`). L'outil n'a pas d'option `persistent` : la surveillance s'arrête
+   au bout de trente minutes et te prévient, réarme-la aussitôt. Sur un projet
+   `/buildyoursite`, remplace le fichier par `.buildyoursite/comments.json` :
 
    ```bash
    F=".overlay/comments.json"
@@ -201,8 +220,8 @@ Le watcher te réveille à chaque lot. Alors :
 3. Applique **tous** les commentaires du lot.
 4. Vérifie : `npx tsc --noEmit` sur un projet TypeScript, sinon recharge la page dans le
    panneau et regarde. Cassé → corrige avant de répondre.
-5. Passe les lots à `done`. Le watcher persistant reste armé ; ton écriture le réveille une
-   fois à vide, c'est normal.
+5. Passe les lots à `done`. Le watcher reste armé ; ton écriture le réveille une fois à
+   vide, c'est normal.
 6. Réponds **en une ligne**.
 
 Commentaire ambigu : prends la lecture la plus probable et applique-la. Il corrigera d'un
@@ -267,7 +286,39 @@ refais l'appel.
 
 **Un panneau navigateur replié ne publie rien.** Il mesure zéro pixel : la synchronisation se
 tait plutôt que d'envoyer une position absurde. Les téléphones gardent la dernière bonne
-position et se recalent dès que le panneau réapparaît.
+position et se recalent dès que le panneau réapparaît. C'est pour ça que la phase 1 vérifie
+qu'il est visible : masqué dès l'ouverture, il laisse des téléphones figés en haut de page.
+
+**Les téléphones suivent ce qu'on fait, pas seulement où l'on est.** Chaque clic de la
+fenêtre principale s'y rejoue comme un toucher de doigt, sur le même élément : une question
+de FAQ, un menu, un onglet, une fenêtre surgissante, un carrousel, une étape de formulaire.
+Avant de toucher, le téléphone vérifie que l'élément est dans l'état où il était avant le
+clic : ce qui y est déjà ouvert ne se referme pas. Les saisies se recopient, Échap et les
+flèches aussi, comme le défilement d'un élément qui défile seul. Sans ça, la FAQ ouverte à
+gauche restait fermée dans les téléphones : constaté le 2026-10-01.
+
+Le reste suit aussi. Les cookies (ceux que la page ne voit pas compris, comme une session
+de compte) et le localStorage de la fenêtre principale sont recopiés ; le téléphone se
+recharge quand la différence se voit : un bandeau de cookies refusé, une connexion, un
+panier, un thème. **Un envoi de formulaire ne part qu'une fois** : rejoué par un téléphone,
+il reçoit la réponse de la fenêtre principale, sans atteindre le site. Pas de demande en
+double dans la base, pas de courriel en double. **Le hasard est partagé** : chaque chargement
+de la fenêtre principale tire une graine, que les téléphones reprennent.
+
+Ce qui ne passe pas : les gestes en mode Édition (c'est voulu), un lien (la page suit
+déjà), le survol (un téléphone n'en a pas), un carrousel glissé à la souris (ses flèches et
+ses points, oui), le sessionStorage, IndexedDB, le hasard calculé par le serveur du site.
+Les téléphones se touchent aussi : on peut y ouvrir un menu à la main.
+
+**Au premier plan, et ils y restent.** Pas le niveau `floating` d'Electron : sous Windows,
+il place la fenêtre derrière la barre des tâches, et une capture d'écran qui la déplace lui
+fait perdre son premier plan. Constaté le 2026-10-01. Le niveau `pop-up-menu` n'a pas ce
+défaut, et une veille remet le premier plan en moins d'une seconde si Windows le retire.
+
+**La poignée déplace le téléphone par script, pas par la zone de glisser de Windows.**
+N'y remets pas `-webkit-app-region: drag` : cette zone ne reçoit pas le survol, la fenêtre
+restait en mode « les clics traversent » et le clic tombait sur la fenêtre de dessous. Le
+téléphone ne bougeait pas. Constaté le 2026-10-01.
 
 **Ce sont des téléphones de Chrome, pas de Safari.** La mise en page, les points de rupture,
 `(hover: none)` et `(pointer: coarse)` sont ceux du téléphone. Le rendu des polices et la
