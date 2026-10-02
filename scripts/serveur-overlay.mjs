@@ -74,6 +74,7 @@ const FICHIER_COMMENTAIRES = path.join(DOSSIER_OVERLAY, "comments.json");
 const DOSSIER_PIECES = path.join(DOSSIER_OVERLAY, "attachments");
 const SCRIPT_OVERLAY = path.join(ICI, "overlay.js");
 const SCRIPT_SYNCHRO = path.join(ICI, "synchro.js");
+const SCRIPT_DEPLACER = path.join(ICI, "deplacer.js");
 
 /* Un projet /buildyoursite rend son propre overlay, en React, après
    l'hydratation : notre script, qui vérifie sa présence à son chargement,
@@ -84,9 +85,14 @@ const sansOverlay = args.includes("--sans-overlay") || projetBuildyoursite;
 
 // La synchronisation passe en premier : dans un téléphone, elle lève le drapeau
 // qui empêche overlay.js de se monter.
+// Le module « déplacer à la souris » vient dans tous les cas, y compris pour un
+// projet /buildyoursite : il lit le mode Édition sur les boutons de l'overlay,
+// quel qu'il soit, et reste inerte tant qu'aucun overlay n'est monté (dans un
+// téléphone, par exemple).
 const BALISE =
   '<script src="/__overlay/synchro.js" defer></script>' +
-  (sansOverlay ? "" : '<script src="/__overlay/overlay.js" defer></script>');
+  (sansOverlay ? "" : '<script src="/__overlay/overlay.js" defer></script>') +
+  '<script src="/__overlay/deplacer.js" defer></script>';
 
 /* ------------------------------ téléphones ------------------------------- */
 
@@ -609,8 +615,9 @@ const serveur = http.createServer(async (req, res) => {
   try {
     const chemin = (req.url || "/").split("?")[0];
 
-    if (chemin === "/__overlay/overlay.js" || chemin === "/__overlay/synchro.js") {
-      const js = await readFile(chemin.endsWith("synchro.js") ? SCRIPT_SYNCHRO : SCRIPT_OVERLAY);
+    if (chemin === "/__overlay/overlay.js" || chemin === "/__overlay/synchro.js" || chemin === "/__overlay/deplacer.js") {
+      const fichier = chemin.endsWith("synchro.js") ? SCRIPT_SYNCHRO : chemin.endsWith("deplacer.js") ? SCRIPT_DEPLACER : SCRIPT_OVERLAY;
+      const js = await readFile(fichier);
       res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
       return res.end(js);
     }

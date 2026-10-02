@@ -25,6 +25,49 @@ Deux modes d'envoi, dans la barre :
 Si la page porte déjà l'overlay de `/buildyoursite` (`[data-buildyoursite-ui]`), le script ne
 se monte pas.
 
+## Déplacer à la souris
+
+`scripts/deplacer.js` est injecté à côté de l'overlay, y compris dans un projet
+`/buildyoursite`, dont l'overlay React n'est pas modifié. Il lit le mode Édition sur les boutons
+Navigation / Édition de l'overlay (`role="radio"`, `aria-checked`, identiques dans les deux) :
+il reste inerte tant qu'aucun overlay n'est monté, dans un téléphone par exemple.
+
+En Édition, un clic sélectionne l'élément (un bouton ou une image vise le bouton, pas son texte ;
+« ↑ parent » monte d'un cran). Une petite fenêtre se pose à côté, déplaçable par son titre :
+
+- **les points**, en haut à gauche comme les boutons d'une fenêtre : un par voisin dans le
+  conteneur, le point allumé est la position, un clic en choisit une autre. Au-delà de huit
+  voisins : « ◀ 3 / 12 ▶ ».
+- **la croix** : on glisse le pion central (Maj : un seul axe), ou on clique une flèche (Maj :
+  10 px). Avec le focus dans la fenêtre, les flèches du clavier poussent.
+
+L'aperçu n'écrit rien dans le code, et presque rien dans la page : la propriété CSS `translate`
+en ligne, plus `order` en ligne en flex et grid. Dans un flux normal (une pile de blocs), les
+voisins reçoivent un `translate` pour faire place. Un élément `inline` passe en `inline-block` le
+temps de l'aperçu. Tout est retiré quand le lot passe à `done`.
+
+« Envoyer » (barre en bas à gauche) part comme un commentaire. Les lots d'un projet
+`/buildyoursite` vont sur `POST /api/buildyoursite`, les autres sur `POST /__overlay/comments` :
+le module regarde s'il existe un `[data-buildyoursite-ui]` qui n'est pas le sien. Tant que le lot
+est `pending` ou `en_cours`, la croix et les points sont grisés ; « Libérer » retire l'aperçu sans
+attendre.
+
+Le lot porte, dans `target.deplacement` :
+
+```json
+{
+  "type": "deplacement-souris",
+  "translation": { "dx": 24, "dy": -8, "unite": "px", "depart": { "x": 0, "y": 0 }, "arrivee": { "x": 24, "y": -8 } },
+  "ordre": { "de": 1, "vers": 3, "sur": 3, "apres": "button « Contact »", "avant": null, "freres": ["button « Réserver »", "..."] },
+  "conteneur": { "selector": "#actions", "tag": "div", "display": "flex", "flexDirection": "row", "gap": "14px", "enfants": 3 },
+  "element": { "display": "inline", "remarque": "..." },
+  "fenetre": { "largeur": 1024, "hauteur": 768 }
+}
+```
+
+`translation`, `ordre` et `element` sont facultatifs. Le `message` du commentaire dit la même
+chose en français.
+
 ## Sur le disque
 
 `POST /__overlay/comments` écrit dans `.overlay/comments.json`, à la racine donnée au

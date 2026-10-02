@@ -78,6 +78,7 @@ commentaires arrivent dans `.overlay/comments.json`, un watcher réveille Claude
 | `scripts/serveur-overlay.mjs` | Le serveur : statique ou proxy, avec injection |
 | `scripts/overlay.js` | L'overlay, en JavaScript pur, sans dépendance |
 | `scripts/synchro.js` | Ce qui relie votre fenêtre aux téléphones |
+| `scripts/deplacer.js` | Le déplacement à la souris : une croix pour décaler, des points pour l'ordre |
 | `scripts/telephones.mjs` | Les deux iPhones flottants |
 | `scripts/telephones/` | Leur boîtier, leur fiche technique, leur moteur |
 | `scripts/miroir.mjs` | La copie locale d'un site qui vous appartient |

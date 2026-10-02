@@ -38,6 +38,7 @@ quelque chose ?*
 | L'overlay lui-même (JS pur, injecté) | `<skill>/scripts/overlay.js` |
 | Les deux iPhones flottants | `<skill>/scripts/telephones.mjs` |
 | Ce qui relie la fenêtre aux téléphones (JS pur, injecté) | `<skill>/scripts/synchro.js` |
+| Le déplacement à la souris : croix et points (JS pur, injecté) | `<skill>/scripts/deplacer.js` |
 | Le moteur des téléphones, installé une fois | `~/.claude/overlay/moteur` |
 | Copie d'un site qui appartient à l'utilisateur | `<skill>/scripts/miroir.mjs` |
 | Mécanique, format des commentaires, watcher, téléphones | `<skill>/references/mecanique.md` |
@@ -208,7 +209,8 @@ appartient. Tu ne déploies rien.
    `description` : `commentaires overlay <nom du site>`.
 
 6. Rends la main en **trois lignes** : l'URL ; « bascule la barre sur Édition et clique sur
-   ce que tu veux changer, ou demande le style d'une marque connue (liste et aperçus :
+   ce que tu veux changer (écris-le, ou bouge-le avec la croix et les points qui s'ouvrent à
+   côté), ou demande le style d'une marque connue (liste et aperçus :
    https://getdesign.md/design-md) » ; « les deux iPhones suivent ta fenêtre, déplace-les par
    la poignée en haut à droite de chacun ».
 
@@ -285,6 +287,31 @@ rends la main comme à la phase 1 (trois lignes), précédées de ta ligne « Fa
 site dans le style de X », palette et polices comprises, est une décision plutôt qu'une
 retouche : c'est le cas où l'on repasse sur Opus, et une police propriétaire se remplace alors
 par son équivalent libre.
+
+### Quand un lot porte un déplacement (`target.deplacement`)
+
+L'utilisateur a bougé l'élément à la souris : une croix pour le décaler, une rangée de points
+pour changer sa place parmi ses voisins. Le message du commentaire le dit en français,
+`target.deplacement` donne les valeurs exactes (format dans `references/mecanique.md`). Son
+aperçu disparaît quand tu passes le lot à `done` : ce que tu écris dans le code doit donc donner
+**exactement** ce qu'il a vu.
+
+- **`ordre`** : c'est un changement de place dans le code. Échange les éléments dans le JSX ou le
+  HTML pour que celui-ci soit en `vers`-ième position sur `sur` (`apres` et `avant` disent ses
+  nouveaux voisins, `freres` liste le conteneur dans l'ordre actuel). Si les voisins viennent d'un
+  tableau de données (un `.map`), change l'ordre des données, pas le balisage. Une classe
+  `order-N` n'est qu'un dernier recours, quand les voisins ne se laissent pas échanger.
+- **`translation`** : applique `dx` et `dy` en pixels sur cet élément, par translation. Avec
+  Tailwind `translate-x-[24px] translate-y-[-8px]` (une valeur négative s'écrit
+  `-translate-y-[8px]`), sinon `translate: 24px -8px` en CSS. S'il porte déjà une translation,
+  ajoute le déplacement à la sienne (`depart` dit celle que l'aperçu avait au début). Avec
+  `element.display: "inline"`, une translation n'agit pas : ajoute `inline-block`.
+- **Les deux ensemble** : l'ordre d'abord, la translation ensuite.
+- **Un décalage en pixels ne s'adapte pas à l'écran.** Si `fenetre.largeur` est sous 768, ou si le
+  décalage dépasse environ 40 px sur un élément d'une rangée ou d'une grille, applique-le quand
+  même (c'est ce qu'il a demandé) et dis-le dans une seconde ligne, avec l'alternative : un
+  échange d'ordre, une marge ou un `gap`.
+- Réponse en une ligne : « Fait : bouton décalé de 24 px à droite. »
 
 ### Retrouver le code visé
 
